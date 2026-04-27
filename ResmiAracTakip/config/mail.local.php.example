@@ -1,0 +1,13 @@
+<?php
+declare(strict_types=1);
+
+return [
+    'host' => 'smtp.gmail.com',
+    'port' => 465,
+    'encryption' => 'ssl', // ssl veya tls
+    'username' => 'ornek@gmail.com',
+    'password' => 'gmail-uygulama-sifresi',
+    'from_address' => 'ornek@gmail.com',
+    'from_name' => 'Resmi Araç Takip Sistemi',
+    'timeout' => 20,
+];

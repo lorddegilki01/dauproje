@@ -1,0 +1,4 @@
+config/mail.local.php
+storage/sessions/*
+!storage/sessions/.gitkeep
+storage/backups/*.sql
