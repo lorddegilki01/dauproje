@@ -8,6 +8,9 @@ COLLATE utf8mb4_turkish_ci;
 
 USE kantin_otomasyon;
 
+DROP TABLE IF EXISTS backup_logs;
+DROP TABLE IF EXISTS backups;
+DROP TABLE IF EXISTS backup_settings;
 DROP TABLE IF EXISTS stock_movements;
 DROP TABLE IF EXISTS sale_items;
 DROP TABLE IF EXISTS sales;
@@ -95,6 +98,49 @@ CREATE TABLE expenses (
     INDEX idx_expense_date (expense_date)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_turkish_ci;
 
+CREATE TABLE backup_settings (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    automatic_enabled TINYINT(1) NOT NULL DEFAULT 0,
+    frequency ENUM('daily', 'weekly', 'monthly') NOT NULL DEFAULT 'daily',
+    backup_time CHAR(5) NOT NULL DEFAULT '03:00',
+    max_backup_count INT UNSIGNED NOT NULL DEFAULT 30,
+    backup_path VARCHAR(255) NOT NULL,
+    auto_cleanup_enabled TINYINT(1) NOT NULL DEFAULT 1,
+    last_success_at DATETIME NULL,
+    last_failed_at DATETIME NULL,
+    next_run_at DATETIME NULL,
+    last_error TEXT NULL,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_turkish_ci;
+
+CREATE TABLE backups (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    file_name VARCHAR(255) NOT NULL,
+    file_path VARCHAR(500) NOT NULL,
+    backup_type ENUM('manuel', 'otomatik') NOT NULL DEFAULT 'manuel',
+    status ENUM('başarılı', 'başarısız', 'işleniyor') NOT NULL DEFAULT 'işleniyor',
+    file_size BIGINT UNSIGNED NOT NULL DEFAULT 0,
+    checksum VARCHAR(128) NULL,
+    error_message TEXT NULL,
+    started_by INT UNSIGNED NULL,
+    started_at DATETIME NOT NULL,
+    finished_at DATETIME NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_backups_user FOREIGN KEY (started_by) REFERENCES users(id) ON DELETE SET NULL,
+    INDEX idx_backups_created (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_turkish_ci;
+
+CREATE TABLE backup_logs (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    backup_id INT UNSIGNED NULL,
+    action VARCHAR(100) NOT NULL,
+    status ENUM('başarılı', 'başarısız', 'bilgi') NOT NULL DEFAULT 'bilgi',
+    message TEXT NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_backup_logs_backup FOREIGN KEY (backup_id) REFERENCES backups(id) ON DELETE CASCADE,
+    INDEX idx_backup_logs_created (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_turkish_ci;
+
 INSERT INTO users (full_name, username, password_hash, role, is_active) VALUES
 ('Sistem Yöneticisi', 'admin', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin', 1),
 ('Kantin Kasiyeri', 'kasiyer', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'kasiyer', 1);
@@ -135,3 +181,10 @@ INSERT INTO expenses (expense_type, amount, expense_date, description, created_a
 ('Elektrik', 1200.00, CURDATE() - INTERVAL 5 DAY, 'Aylık elektrik faturası', NOW() - INTERVAL 5 DAY),
 ('Su', 380.00, CURDATE() - INTERVAL 4 DAY, 'Aylık su faturası', NOW() - INTERVAL 4 DAY),
 ('Malzeme', 975.50, CURDATE() - INTERVAL 2 DAY, 'Temizlik ve sarf malzeme alımı', NOW() - INTERVAL 2 DAY);
+
+INSERT INTO backup_settings (
+    automatic_enabled, frequency, backup_time, max_backup_count, backup_path,
+    auto_cleanup_enabled, next_run_at
+) VALUES (
+    0, 'daily', '03:00', 30, 'storage/backups', 1, NULL
+);

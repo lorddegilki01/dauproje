@@ -9,11 +9,11 @@ $to = trim((string) ($_GET['to'] ?? date('Y-m-d')));
 $sales = fetch_all(
     'SELECT sale_no, sale_date, total_amount
      FROM sales
-     WHERE status = "tamamlandı" AND DATE(sale_date) BETWEEN :from AND :to
+     WHERE status IN ("tamamlandı","tamamlandÄ±") AND DATE(sale_date) BETWEEN :from AND :to
      ORDER BY sale_date DESC',
     ['from' => $from, 'to' => $to]
 );
-$salesTotal = sum_value('SELECT SUM(total_amount) FROM sales WHERE status = "tamamlandı" AND DATE(sale_date) BETWEEN :from AND :to', ['from' => $from, 'to' => $to]);
+$salesTotal = sum_value('SELECT SUM(total_amount) FROM sales WHERE status IN ("tamamlandı","tamamlandÄ±") AND DATE(sale_date) BETWEEN :from AND :to', ['from' => $from, 'to' => $to]);
 $expenseTotal = sum_value('SELECT SUM(amount) FROM expenses WHERE DATE(expense_date) BETWEEN :from AND :to', ['from' => $from, 'to' => $to]);
 ?>
 <!doctype html>

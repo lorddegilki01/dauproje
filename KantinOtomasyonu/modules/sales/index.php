@@ -3,10 +3,12 @@ declare(strict_types=1);
 require_once __DIR__ . '/../../includes/functions.php';
 require_roles(['admin', 'kasiyer']);
 
-$onlyMine = (string) ($_GET['mine'] ?? '') === '1';
 $isAdmin = is_admin();
-$activeMenu = (!$isAdmin && $onlyMine) ? 'my-sales' : 'sales';
-$pageTitle = 'Satış Modülü';
+$onlyMine = (string) ($_GET['mine'] ?? '') === '1';
+$isCashierDailyPage = !$isAdmin && $onlyMine;
+
+$activeMenu = $isCashierDailyPage ? 'my-sales' : 'sales';
+$pageTitle = $isCashierDailyPage ? 'Günlük Satışlarım' : 'Satış Modülü';
 
 $products = fetch_all(
     'SELECT id, product_name, product_code, sale_price, stock_quantity
@@ -17,6 +19,12 @@ $products = fetch_all(
 
 $from = trim((string) ($_GET['from'] ?? ''));
 $to = trim((string) ($_GET['to'] ?? ''));
+if ($isCashierDailyPage) {
+    $today = date('Y-m-d');
+    $from = $from !== '' ? $from : $today;
+    $to = $to !== '' ? $to : $today;
+}
+
 $where = ['1=1'];
 $params = [];
 if ($from !== '') {
@@ -38,12 +46,22 @@ $sales = fetch_all(
      INNER JOIN users u ON u.id = s.user_id
      WHERE ' . implode(' AND ', $where) . '
      ORDER BY s.sale_date DESC
-     LIMIT 60',
+     LIMIT 100',
     $params
 );
 
+$salesCount = count($sales);
+$salesTotal = 0.0;
+foreach ($sales as $saleRow) {
+    if ((string) $saleRow['status'] !== 'iptal') {
+        $salesTotal += (float) $saleRow['total_amount'];
+    }
+}
+$avgTicket = $salesCount > 0 ? $salesTotal / $salesCount : 0.0;
+
 require __DIR__ . '/../../includes/header.php';
 ?>
+<?php if (!$isCashierDailyPage): ?>
 <section class="card">
     <h3>Hızlı Satış Ekranı</h3>
     <div class="pos-shell">
@@ -95,10 +113,40 @@ require __DIR__ . '/../../includes/header.php';
         </aside>
     </div>
 </section>
+<?php endif; ?>
+
+<?php if ($isCashierDailyPage): ?>
+<section class="stats">
+    <article class="card stat">
+        <div class="kpi-top">
+            <div class="kpi-icon">🧾</div>
+            <div class="kpi-meta"><h3>Bugünkü İşlem</h3><small>adet</small></div>
+        </div>
+        <strong><?= e((string) $salesCount) ?></strong>
+        <canvas class="sparkline" data-points="2,3,4,3,5,4,6"></canvas>
+    </article>
+    <article class="card stat">
+        <div class="kpi-top">
+            <div class="kpi-icon">💰</div>
+            <div class="kpi-meta"><h3>Bugünkü Ciro</h3><small>kasiyer toplamı</small></div>
+        </div>
+        <strong><?= e(format_money($salesTotal)) ?></strong>
+        <canvas class="sparkline" data-points="3,4,5,6,5,7,8"></canvas>
+    </article>
+    <article class="card stat">
+        <div class="kpi-top">
+            <div class="kpi-icon">📊</div>
+            <div class="kpi-meta"><h3>Ortalama Fiş</h3><small>bugün</small></div>
+        </div>
+        <strong><?= e(format_money($avgTicket)) ?></strong>
+        <canvas class="sparkline" data-points="4,3,5,4,6,5,7"></canvas>
+    </article>
+</section>
+<?php endif; ?>
 
 <section class="card">
     <div class="card-head">
-        <h3><?= $onlyMine ? 'Satış Geçmişim' : 'Satış Geçmişi' ?></h3>
+        <h3><?= $isCashierDailyPage ? 'Bugünkü Satış Geçmişim' : ($onlyMine ? 'Satış Geçmişim' : 'Satış Geçmişi') ?></h3>
         <form method="get" class="form inline">
             <?php if ($onlyMine): ?><input type="hidden" name="mine" value="1"><?php endif; ?>
             <label>Başlangıç<input type="date" name="from" value="<?= e($from) ?>"></label>
@@ -120,7 +168,7 @@ require __DIR__ . '/../../includes/header.php';
                     <td><span class="<?= e(badge_status((string) $sale['status'])) ?>"><?= e(status_label((string) $sale['status'])) ?></span></td>
                     <td class="actions">
                         <a href="<?= e(app_url('modules/sales/view.php?id=' . (int) $sale['id'])) ?>">Detay</a>
-                        <?php if (is_admin() && $sale['status'] === 'tamamlandı'): ?>
+                        <?php if ($isAdmin && (string) $sale['status'] === 'tamamlandı'): ?>
                             <form method="post" action="<?= e(app_url('modules/sales/cancel.php')) ?>">
                                 <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
                                 <input type="hidden" name="id" value="<?= e((string) $sale['id']) ?>">

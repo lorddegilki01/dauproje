@@ -1,0 +1,3 @@
+storage/sessions/*
+!storage/sessions/.gitkeep
+storage/backups/*.sql

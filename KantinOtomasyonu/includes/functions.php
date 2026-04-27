@@ -170,9 +170,10 @@ function format_date(?string $date, string $format = 'd.m.Y H:i'): string
 function badge_status(string $status): string
 {
     return match ($status) {
-        'aktif', 'tamamlandı' => 'badge success',
-        'pasif', 'iptal' => 'badge danger',
-        'kritik', 'stok bitti' => 'badge warning',
+        'aktif', 'tamamlandı', 'başarılı' => 'badge success',
+        'pasif', 'iptal', 'başarısız' => 'badge danger',
+        'kritik', 'stok bitti', 'işleniyor' => 'badge warning',
+        'bilgi' => 'badge neutral',
         default => 'badge neutral',
     };
 }

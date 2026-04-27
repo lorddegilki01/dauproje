@@ -488,6 +488,10 @@ html[data-theme="light"] .menu-list a.active { color: #7a4f00; }
     margin-bottom: 1rem;
 }
 
+.card .card-head + .stats {
+    margin-top: 1rem;
+}
+
 .stat {
     padding: .95rem;
     position: relative;
@@ -780,9 +784,17 @@ input:focus, select:focus, textarea:focus {
     border-radius: 12px;
     border: 1px solid transparent;
     padding: .62rem .96rem;
+    min-height: 44px;
+    line-height: 1;
     font-weight: 700;
     cursor: pointer;
     transition: .22s ease;
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+.form.inline .btn {
+    min-width: 112px;
 }
 
 .btn.primary {

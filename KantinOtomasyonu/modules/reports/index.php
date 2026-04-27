@@ -11,7 +11,7 @@ $to = trim((string) ($_GET['to'] ?? date('Y-m-d')));
 
 $salesTotal = sum_value(
     'SELECT SUM(total_amount) FROM sales
-     WHERE status = "tamamlandı" AND DATE(sale_date) BETWEEN :from AND :to',
+     WHERE status IN ("tamamlandı","tamamlandÄ±") AND DATE(sale_date) BETWEEN :from AND :to',
     ['from' => $from, 'to' => $to]
 );
 $expenseTotal = sum_value(
@@ -29,7 +29,7 @@ $productReport = fetch_all(
      FROM sale_items si
      INNER JOIN sales s ON s.id = si.sale_id
      INNER JOIN products p ON p.id = si.product_id
-     WHERE s.status = "tamamlandı" AND DATE(s.sale_date) BETWEEN :from AND :to
+     WHERE s.status IN ("tamamlandı","tamamlandÄ±") AND DATE(s.sale_date) BETWEEN :from AND :to
      GROUP BY si.product_id, p.product_name
      ORDER BY sold_qty DESC',
     ['from' => $from, 'to' => $to]

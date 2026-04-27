@@ -13,7 +13,7 @@ $topSold = fetch_all(
      FROM sale_items si
      INNER JOIN sales s ON s.id = si.sale_id
      INNER JOIN products p ON p.id = si.product_id
-     WHERE s.status = "tamamlandı" AND s.sale_date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+     WHERE s.status IN ("tamamlandı","tamamlandÄ±") AND s.sale_date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
      GROUP BY si.product_id, p.product_name
      ORDER BY qty DESC LIMIT 5'
 );
@@ -21,12 +21,20 @@ $notSold = fetch_all(
     'SELECT p.product_name
      FROM products p
      LEFT JOIN sale_items si ON si.product_id = p.id
-     LEFT JOIN sales s ON s.id = si.sale_id AND s.status = "tamamlandı" AND s.sale_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+     LEFT JOIN sales s ON s.id = si.sale_id AND s.status IN ("tamamlandı","tamamlandÄ±") AND s.sale_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
      WHERE p.status="aktif"
      GROUP BY p.id, p.product_name
      HAVING COUNT(s.id) = 0
      ORDER BY p.product_name'
 );
+
+$backupEvents = [];
+if (is_admin()) {
+    require_once __DIR__ . '/../../includes/BackupManager.php';
+    $backupManager = new BackupManager(db(), dirname(__DIR__, 2));
+    $backupManager->ensureSchema();
+    $backupEvents = $backupManager->getRecentLogs(15);
+}
 
 require __DIR__ . '/../../includes/header.php';
 ?>
@@ -70,4 +78,25 @@ require __DIR__ . '/../../includes/header.php';
         </ul>
     </section>
 </div>
+<?php if (is_admin()): ?>
+<section class="card">
+    <h3>Yedekleme Bildirimleri</h3>
+    <div class="table-wrap">
+        <table class="table">
+            <thead><tr><th>Tarih</th><th>İşlem</th><th>Durum</th><th>Mesaj</th></tr></thead>
+            <tbody>
+            <?php if (!$backupEvents): ?><tr><td colspan="4">Yedekleme bildirimi bulunmuyor.</td></tr><?php endif; ?>
+            <?php foreach ($backupEvents as $event): ?>
+                <tr>
+                    <td><?= e(format_date((string) $event['created_at'])) ?></td>
+                    <td><?= e((string) $event['action']) ?></td>
+                    <td><span class="<?= e(badge_status((string) $event['status'])) ?>"><?= e((string) $event['status']) ?></span></td>
+                    <td><?= e((string) $event['message']) ?></td>
+                </tr>
+            <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+</section>
+<?php endif; ?>
 <?php require __DIR__ . '/../../includes/footer.php'; ?>

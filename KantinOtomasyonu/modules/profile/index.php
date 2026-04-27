@@ -46,6 +46,8 @@ if (is_post()) {
     $user['username'] = $username;
 }
 
+$isActive = (int) ($user['is_active'] ?? 1);
+
 require __DIR__ . '/../../includes/header.php';
 ?>
 <section class="card">
@@ -60,10 +62,10 @@ require __DIR__ . '/../../includes/header.php';
             <input type="text" name="username" value="<?= e((string) $user['username']) ?>" required>
         </label>
         <label>Rol
-            <input type="text" value="<?= e(mb_strtoupper((string) $user['role'], 'UTF-8')) ?>" disabled>
+            <input type="text" value="<?= e(mb_strtoupper((string) ($user['role'] ?? 'kasiyer'), 'UTF-8')) ?>" disabled>
         </label>
         <label>Durum
-            <input type="text" value="<?= e((int) $user['is_active'] === 1 ? 'Aktif' : 'Pasif') ?>" disabled>
+            <input type="text" value="<?= e($isActive === 1 ? 'Aktif' : 'Pasif') ?>" disabled>
         </label>
         <div class="full actions">
             <button class="btn primary" type="submit">Güncelle</button>

@@ -53,6 +53,9 @@ $isAdmin = ($user['role'] ?? '') === 'admin';
                 <a class="<?= e(active_menu('cashiers')) ?>" href="<?= e(app_url('modules/users/index.php?role=kasiyer')) ?>">
                     <span class="nav-icon">&#128179;</span><span>Kasiyer Yönetimi</span>
                 </a>
+                <a class="<?= e(active_menu('backups')) ?>" href="<?= e(app_url('admin/backups.php')) ?>">
+                    <span class="nav-icon">&#128190;</span><span>Yedekleme Yönetimi</span>
+                </a>
             </nav>
         </div>
     <?php else: ?>
