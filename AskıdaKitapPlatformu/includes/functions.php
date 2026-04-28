@@ -349,3 +349,19 @@ function update_session_user(array $userRow): void
         'city' => (string) ($userRow['city'] ?? ''),
     ];
 }
+
+function log_password_change(int $userId, string $type, string $status = 'basarili', string $details = ''): void
+{
+    execute_query(
+        'INSERT INTO password_change_logs (user_id, change_type, change_status, ip_address, user_agent, details, created_at)
+         VALUES (:user_id, :change_type, :change_status, :ip_address, :user_agent, :details, NOW())',
+        [
+            'user_id' => $userId,
+            'change_type' => $type,
+            'change_status' => $status,
+            'ip_address' => client_ip(),
+            'user_agent' => client_agent(),
+            'details' => $details,
+        ]
+    );
+}

@@ -4,6 +4,6 @@
             <p>© <?= e((string) date('Y')) ?> Askıda Kitap Platformu · Bir kitap bir hayatı değiştirebilir.</p>
         </div>
     </footer>
-    <script src="<?= e(app_url('assets/js/app.js')) ?>"></script>
+    <script src="<?= e(app_url('assets/js/app.js?v=' . (string) @filemtime(__DIR__ . '/../assets/js/app.js'))) ?>"></script>
 </body>
 </html>

@@ -10,7 +10,7 @@
         doc.setAttribute('data-theme', nextTheme);
         localStorage.setItem('ak_theme', nextTheme);
         if (themeBtn) {
-            themeBtn.textContent = nextTheme === 'dark' ? '☀' : '☾';
+            themeBtn.textContent = nextTheme === 'dark' ? '\u2600' : '\u263E';
         }
     };
 
@@ -43,7 +43,7 @@
         });
     }
 
-    const revealNodes = document.querySelectorAll('.card, .stat, .book-card, .hero, .landing-hero, .stat-card, .process-card, .cta-band');
+    const revealNodes = document.querySelectorAll('.card, .book-card, .hero, .landing-v2, .v2-stat-card, .v2-step, .v2-cta');
     const reveal = new IntersectionObserver((entries) => {
         entries.forEach((entry) => {
             if (entry.isIntersecting) {
@@ -79,11 +79,21 @@
     document.querySelectorAll('[data-count]').forEach((counter) => animateCount(counter));
 
     if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        const parallaxRoot = document.querySelector('[data-landing-parallax]');
+        const parallaxNodes = parallaxRoot ? parallaxRoot.querySelectorAll('.v2-orb, .v2-floating, .v2-hero-visual') : [];
+
         body.addEventListener('mousemove', (event) => {
             const x = (event.clientX / window.innerWidth) - 0.5;
             const y = (event.clientY / window.innerHeight) - 0.5;
             body.style.setProperty('--px', `${x * 12}px`);
             body.style.setProperty('--py', `${y * 12}px`);
+
+            if (parallaxNodes.length > 0) {
+                parallaxNodes.forEach((node, idx) => {
+                    const strength = (idx + 1) * 2.2;
+                    node.style.transform = `translate3d(${x * strength}px, ${y * strength}px, 0)`;
+                });
+            }
         });
     }
 

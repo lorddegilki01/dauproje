@@ -12,7 +12,15 @@ $stats = [
     'active_books' => count_value('SELECT COUNT(*) FROM books WHERE donor_user_id = :id AND status IN ("askida","askıda")', ['id' => (int) $user['id']]),
     'requested_books' => count_value('SELECT COUNT(*) FROM book_requests WHERE requester_user_id = :id', ['id' => (int) $user['id']]),
     'pending_requests' => count_value('SELECT COUNT(*) FROM book_requests WHERE requester_user_id = :id AND request_status = "bekliyor"', ['id' => (int) $user['id']]),
-    'delivered_matches' => count_value('SELECT COUNT(*) FROM matches WHERE (requester_user_id=:id OR donor_user_id=:id) AND delivery_status = "teslim edildi"', ['id' => (int) $user['id']]),
+    'delivered_matches' => count_value(
+        'SELECT COUNT(*) FROM matches
+         WHERE (requester_user_id = :requester_id OR donor_user_id = :donor_id)
+           AND delivery_status = "teslim edildi"',
+        [
+            'requester_id' => (int) $user['id'],
+            'donor_id' => (int) $user['id'],
+        ]
+    ),
 ];
 
 $recentRequests = fetch_all(

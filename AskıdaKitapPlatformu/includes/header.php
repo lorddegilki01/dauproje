@@ -15,7 +15,7 @@ $notificationCount = $user ? unread_notification_count((int) $user['id']) : 0;
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= e($pageTitle) ?> | <?= e(APP_NAME) ?></title>
     <meta name="description" content="Askıda Kitap Platformu ile kitap bağışı ve kitap talep süreçlerini güvenle yönetin.">
-    <link rel="stylesheet" href="<?= e(app_url('assets/css/style.css')) ?>">
+    <link rel="stylesheet" href="<?= e(app_url('assets/css/style.css?v=' . (string) @filemtime(__DIR__ . '/../assets/css/style.css'))) ?>">
 </head>
 <body class="app-shell">
 <div class="bg-orbs" aria-hidden="true">
@@ -28,7 +28,10 @@ $notificationCount = $user ? unread_notification_count((int) $user['id']) : 0;
     <div class="container nav">
         <a class="brand" href="<?= e(app_url('index.php')) ?>">
             <span class="brand-logo">AK</span>
-            <span class="brand-text">Askıda Kitap</span>
+            <span class="brand-meta">
+                <span class="brand-text">Askıda Kitap</span>
+                <small>Dayanışma Platformu</small>
+            </span>
         </a>
 
         <button class="menu-toggle" type="button" data-menu-toggle aria-label="Menüyü Aç/Kapat">☰</button>
@@ -42,6 +45,10 @@ $notificationCount = $user ? unread_notification_count((int) $user['id']) : 0;
                 <a class="<?= $activeMenu === 'my_requests' ? 'active' : '' ?>" href="<?= e(app_url('requests/index.php')) ?>">Taleplerim</a>
                 <a class="<?= $activeMenu === 'incoming_requests' ? 'active' : '' ?>" href="<?= e(app_url('requests/manage.php')) ?>">Gelen Talepler</a>
                 <a class="<?= $activeMenu === 'matches' ? 'active' : '' ?>" href="<?= e(app_url('matches/index.php')) ?>">Teslim Süreci</a>
+                <?php if ($isAdmin): ?>
+                    <a class="<?= $activeMenu === 'password_changes' ? 'active' : '' ?>" href="<?= e(app_url('admin/password_changes.php')) ?>">Şifre Geçmişi</a>
+                    <a class="<?= $activeMenu === 'backups' ? 'active' : '' ?>" href="<?= e(app_url('admin/backups.php')) ?>">Yedekleme</a>
+                <?php endif; ?>
             <?php endif; ?>
             <a class="<?= $activeMenu === 'about' ? 'active' : '' ?>" href="<?= e(app_url('pages/about.php')) ?>">Hakkımızda</a>
             <a class="<?= $activeMenu === 'faq' ? 'active' : '' ?>" href="<?= e(app_url('pages/faq.php')) ?>">SSS</a>

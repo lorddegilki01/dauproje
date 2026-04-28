@@ -77,8 +77,13 @@ if (is_post()) {
             );
             log_activity((int) $user['id'], 'Profil', 'Şifre güncelleme', 'Kullanıcı şifresini güncelledi.');
             system_log((int) $user['id'], 'password.change', 'basarili', 'Profil üzerinden şifre değiştirildi.');
+            log_password_change((int) $user['id'], 'profil', 'basarili', 'Kullanıcı profilinden şifre değiştirdi.');
+            create_notification((int) $user['id'], 'Şifre Güncellendi', 'Hesap şifreniz profil sayfasından güncellendi.', 'bilgi', 'profile.php');
             set_flash('success', 'Şifreniz başarıyla güncellendi.');
             redirect('profile.php');
+        } else {
+            log_password_change((int) $user['id'], 'profil', 'basarisiz', 'Profil şifre değiştirme denemesi başarısız.');
+            system_log((int) $user['id'], 'password.change', 'basarisiz', 'Profil üzerinden şifre değiştirme denemesi başarısız.');
         }
     }
 }
@@ -87,7 +92,15 @@ $myStats = [
     'my_books' => count_value('SELECT COUNT(*) FROM books WHERE donor_user_id = :id', ['id' => (int) $user['id']]),
     'my_requests' => count_value('SELECT COUNT(*) FROM book_requests WHERE requester_user_id = :id', ['id' => (int) $user['id']]),
     'waiting_requests' => count_value('SELECT COUNT(*) FROM book_requests WHERE requester_user_id = :id AND request_status = "bekliyor"', ['id' => (int) $user['id']]),
-    'delivered' => count_value('SELECT COUNT(*) FROM matches WHERE (donor_user_id=:id OR requester_user_id=:id) AND delivery_status = "teslim edildi"', ['id' => (int) $user['id']]),
+    'delivered' => count_value(
+        'SELECT COUNT(*) FROM matches
+         WHERE (donor_user_id = :donor_id OR requester_user_id = :requester_id)
+           AND delivery_status = "teslim edildi"',
+        [
+            'donor_id' => (int) $user['id'],
+            'requester_id' => (int) $user['id'],
+        ]
+    ),
 ];
 
 $userRow = fetch_one('SELECT * FROM users WHERE id = :id', ['id' => (int) $user['id']]);

@@ -23,9 +23,12 @@ if (is_admin()) {
          INNER JOIN books b ON b.id = m.book_id
          INNER JOIN users d ON d.id = m.donor_user_id
          INNER JOIN users r ON r.id = m.requester_user_id
-         WHERE m.donor_user_id = :id OR m.requester_user_id = :id
+         WHERE m.donor_user_id = :donor_id OR m.requester_user_id = :requester_id
          ORDER BY m.created_at DESC',
-        ['id' => (int) $user['id']]
+        [
+            'donor_id' => (int) $user['id'],
+            'requester_id' => (int) $user['id'],
+        ]
     );
 }
 
@@ -74,4 +77,3 @@ require __DIR__ . '/../includes/header.php';
     </div>
 </section>
 <?php require __DIR__ . '/../includes/footer.php'; ?>
-
