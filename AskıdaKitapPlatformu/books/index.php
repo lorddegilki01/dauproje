@@ -9,12 +9,15 @@ $q = normalize_text((string) ($_GET['q'] ?? ''));
 $categoryId = (int) ($_GET['category_id'] ?? 0);
 $city = normalize_text((string) ($_GET['city'] ?? ''));
 
-$where = ['b.is_active = 1', 'b.status IN ("askıda","talep edildi")'];
+$where = ['b.is_active = 1', 'b.status IN ("askida","askıda","talep edildi")'];
 $params = [];
 
 if ($q !== '') {
-    $where[] = '(b.title LIKE :q OR b.author LIKE :q OR b.description LIKE :q)';
-    $params['q'] = '%' . $q . '%';
+    $where[] = '(b.title LIKE :q_title OR b.author LIKE :q_author OR b.description LIKE :q_desc)';
+    $qValue = '%' . $q . '%';
+    $params['q_title'] = $qValue;
+    $params['q_author'] = $qValue;
+    $params['q_desc'] = $qValue;
 }
 if ($categoryId > 0) {
     $where[] = 'b.category_id = :category_id';
@@ -42,7 +45,7 @@ require __DIR__ . '/../includes/header.php';
     <div class="card-head">
         <h2>Askıdaki Kitaplar</h2>
         <?php if (is_logged_in()): ?>
-            <a class="btn primary" href="<?= e(app_url('books/form.php')) ?>">Kitap Ekle</a>
+            <a class="btn primary shine" href="<?= e(app_url('books/form.php')) ?>">Kitap Ekle</a>
         <?php endif; ?>
     </div>
 
@@ -99,4 +102,3 @@ require __DIR__ . '/../includes/header.php';
     <?php endforeach; ?>
 </section>
 <?php require __DIR__ . '/../includes/footer.php'; ?>
-

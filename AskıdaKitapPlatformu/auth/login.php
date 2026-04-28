@@ -9,24 +9,28 @@ if (is_logged_in()) {
 $error = null;
 if (is_post()) {
     verify_csrf();
-    $username = normalize_text((string) ($_POST['username'] ?? ''));
-    $password = (string) ($_POST['password'] ?? '');
-    if ($username === '' || $password === '') {
-        $error = 'Kullanıcı adı ve şifre zorunludur.';
+
+    if (!check_rate_limit('login_' . client_ip(), 8, 300)) {
+        $error = 'Çok fazla giriş denemesi yaptınız. Lütfen 5 dakika sonra tekrar deneyin.';
     } else {
-        $user = fetch_one('SELECT * FROM users WHERE username = :username AND is_active = 1 LIMIT 1', ['username' => $username]);
-        if ($user && password_verify($password, (string) $user['password_hash'])) {
-            session_regenerate_id(true);
-            $_SESSION['user'] = [
-                'id' => (int) $user['id'],
-                'full_name' => (string) $user['full_name'],
-                'username' => (string) $user['username'],
-                'role' => (string) $user['role'],
-            ];
-            log_activity((int) $user['id'], 'Kimlik', 'Giriş', 'Kullanıcı giriş yaptı.');
-            redirect('index.php');
+        $username = normalize_text((string) ($_POST['username'] ?? ''));
+        $password = (string) ($_POST['password'] ?? '');
+
+        if ($username === '' || $password === '') {
+            $error = 'Kullanıcı adı ve şifre zorunludur.';
+        } else {
+            $user = fetch_one('SELECT * FROM users WHERE username = :username AND is_active = 1 LIMIT 1', ['username' => $username]);
+            if ($user && password_verify($password, (string) $user['password_hash'])) {
+                session_regenerate_id(true);
+                update_session_user($user);
+                log_activity((int) $user['id'], 'Kimlik', 'Giriş', 'Kullanıcı giriş yaptı.');
+                system_log((int) $user['id'], 'auth.login', 'basarili', 'Giriş başarılı.');
+                redirect('index.php');
+            }
+
+            system_log(null, 'auth.login', 'basarisiz', 'Başarısız giriş denemesi: ' . $username);
+            $error = 'Kullanıcı adı veya şifre hatalı.';
         }
-        $error = 'Kullanıcı adı veya şifre hatalı.';
     }
 }
 
@@ -34,8 +38,9 @@ $activeMenu = '';
 $pageTitle = 'Giriş Yap';
 require __DIR__ . '/../includes/header.php';
 ?>
-<section class="card form-card">
+<section class="card form-card hero">
     <h2>Hesabınıza Giriş Yapın</h2>
+    <p>Askıdaki kitapları takip etmek ve dayanışmaya katılmak için hesabınıza giriş yapın.</p>
     <?php if ($error): ?><div class="alert error"><?= e($error) ?></div><?php endif; ?>
     <form method="post" class="form">
         <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
@@ -51,4 +56,3 @@ require __DIR__ . '/../includes/header.php';
     </div>
 </section>
 <?php require __DIR__ . '/../includes/footer.php'; ?>
-

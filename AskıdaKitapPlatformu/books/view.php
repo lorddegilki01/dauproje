@@ -23,7 +23,10 @@ if (!$book) {
 $existingRequest = null;
 if (is_logged_in()) {
     $existingRequest = fetch_one(
-        'SELECT id, request_status FROM book_requests WHERE book_id = :book_id AND requester_user_id = :user_id ORDER BY id DESC LIMIT 1',
+        'SELECT id, request_status FROM book_requests
+         WHERE book_id = :book_id AND requester_user_id = :user_id
+         ORDER BY id DESC
+         LIMIT 1',
         ['book_id' => $id, 'user_id' => (int) current_user()['id']]
     );
 }
@@ -34,6 +37,7 @@ require __DIR__ . '/../includes/header.php';
     <h2><?= e((string) $book['title']) ?></h2>
     <p class="muted"><?= e((string) $book['author']) ?> · <?= e((string) ($book['category_name'] ?? 'Genel')) ?></p>
     <p><?= nl2br(e((string) $book['description'])) ?></p>
+
     <div class="detail-grid">
         <div><strong>Şehir:</strong> <?= e((string) $book['city']) ?></div>
         <div><strong>Teslim Şekli:</strong> <?= e((string) $book['delivery_type']) ?></div>
@@ -41,18 +45,18 @@ require __DIR__ . '/../includes/header.php';
         <div><strong>Durum:</strong> <span class="<?= e(badge_class((string) $book['status'])) ?>"><?= e(book_status_label((string) $book['status'])) ?></span></div>
         <div><strong>Bağışçı:</strong> <?= e((string) $book['donor_name']) ?></div>
     </div>
+
     <div class="actions">
-        <?php if (is_logged_in() && (int) current_user()['id'] !== (int) $book['donor_user_id'] && (string) $book['status'] === 'askıda'): ?>
+        <?php if (is_logged_in() && (int) current_user()['id'] !== (int) $book['donor_user_id'] && in_array((string) $book['status'], ['askida', 'askıda'], true)): ?>
             <?php if ($existingRequest): ?>
                 <span class="<?= e(badge_class((string) $existingRequest['request_status'])) ?>">
                     Talebiniz: <?= e(request_status_label((string) $existingRequest['request_status'])) ?>
                 </span>
             <?php else: ?>
-                <a class="btn primary" href="<?= e(app_url('requests/create.php?book_id=' . (int) $book['id'])) ?>">Talep Gönder</a>
+                <a class="btn primary shine" href="<?= e(app_url('requests/create.php?book_id=' . (int) $book['id'])) ?>">Talep Gönder</a>
             <?php endif; ?>
         <?php endif; ?>
         <a class="btn ghost" href="<?= e(app_url('books/index.php')) ?>">Listeye Dön</a>
     </div>
 </section>
 <?php require __DIR__ . '/../includes/footer.php'; ?>
-

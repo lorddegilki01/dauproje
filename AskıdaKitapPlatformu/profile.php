@@ -3,7 +3,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/includes/functions.php';
 require_login();
 
-$activeMenu = '';
+$activeMenu = 'panel';
 $pageTitle = 'Profilim';
 $user = current_user();
 $errors = [];
@@ -44,6 +44,8 @@ if (is_post()) {
                 ]
             );
             $_SESSION['user']['full_name'] = $fullName;
+            $_SESSION['user']['email'] = $email;
+            $_SESSION['user']['city'] = $city;
             set_flash('success', 'Profil bilgileriniz güncellendi.');
             redirect('profile.php');
         }
@@ -74,6 +76,7 @@ if (is_post()) {
                 ]
             );
             log_activity((int) $user['id'], 'Profil', 'Şifre güncelleme', 'Kullanıcı şifresini güncelledi.');
+            system_log((int) $user['id'], 'password.change', 'basarili', 'Profil üzerinden şifre değiştirildi.');
             set_flash('success', 'Şifreniz başarıyla güncellendi.');
             redirect('profile.php');
         }
@@ -83,24 +86,18 @@ if (is_post()) {
 $myStats = [
     'my_books' => count_value('SELECT COUNT(*) FROM books WHERE donor_user_id = :id', ['id' => (int) $user['id']]),
     'my_requests' => count_value('SELECT COUNT(*) FROM book_requests WHERE requester_user_id = :id', ['id' => (int) $user['id']]),
-    'waiting_requests' => count_value(
-        'SELECT COUNT(*) FROM book_requests WHERE requester_user_id = :id AND request_status = "bekliyor"',
-        ['id' => (int) $user['id']]
-    ),
-    'delivered' => count_value(
-        'SELECT COUNT(*) FROM matches WHERE (donor_user_id=:id OR requester_user_id=:id) AND delivery_status = "teslim edildi"',
-        ['id' => (int) $user['id']]
-    ),
+    'waiting_requests' => count_value('SELECT COUNT(*) FROM book_requests WHERE requester_user_id = :id AND request_status = "bekliyor"', ['id' => (int) $user['id']]),
+    'delivered' => count_value('SELECT COUNT(*) FROM matches WHERE (donor_user_id=:id OR requester_user_id=:id) AND delivery_status = "teslim edildi"', ['id' => (int) $user['id']]),
 ];
 
 $userRow = fetch_one('SELECT * FROM users WHERE id = :id', ['id' => (int) $user['id']]);
 require __DIR__ . '/includes/header.php';
 ?>
 <section class="stats-grid">
-    <article class="card stat"><h3>Eklediğim Kitap</h3><strong><?= e((string) $myStats['my_books']) ?></strong></article>
-    <article class="card stat"><h3>Talep Ettiğim</h3><strong><?= e((string) $myStats['my_requests']) ?></strong></article>
-    <article class="card stat"><h3>Onay Bekleyen</h3><strong><?= e((string) $myStats['waiting_requests']) ?></strong></article>
-    <article class="card stat"><h3>Teslim Edilen</h3><strong><?= e((string) $myStats['delivered']) ?></strong></article>
+    <article class="card stat"><h3>Eklediğim Kitap</h3><strong data-count="<?= e((string) $myStats['my_books']) ?>">0</strong></article>
+    <article class="card stat"><h3>Talep Ettiğim</h3><strong data-count="<?= e((string) $myStats['my_requests']) ?>">0</strong></article>
+    <article class="card stat"><h3>Onay Bekleyen</h3><strong data-count="<?= e((string) $myStats['waiting_requests']) ?>">0</strong></article>
+    <article class="card stat"><h3>Teslim Edilen</h3><strong data-count="<?= e((string) $myStats['delivered']) ?>">0</strong></article>
 </section>
 
 <section class="card">
@@ -113,8 +110,8 @@ require __DIR__ . '/includes/header.php';
         <label>E-posta<input type="email" name="email" required value="<?= e((string) ($userRow['email'] ?? '')) ?>"></label>
         <label>Şehir<input type="text" name="city" required value="<?= e((string) ($userRow['city'] ?? '')) ?>"></label>
         <label>Telefon<input type="text" name="phone" value="<?= e((string) ($userRow['phone'] ?? '')) ?>"></label>
-        <label class="full">Rol<input type="text" disabled value="<?= e((string) ($userRow['role'] ?? 'kullanıcı')) ?>"></label>
-        <div class="full actions"><button class="btn primary" type="submit">Bilgileri Güncelle</button></div>
+        <label class="full">Rol<input type="text" disabled value="<?= e(role_label((string) ($userRow['role'] ?? ROLE_USER))) ?>"></label>
+        <div class="full actions"><button class="btn primary shine" type="submit">Bilgileri Güncelle</button></div>
     </form>
 </section>
 
@@ -126,8 +123,7 @@ require __DIR__ . '/includes/header.php';
         <label>Mevcut Şifre<input type="password" name="old_password" required></label>
         <label>Yeni Şifre<input type="password" name="new_password" required></label>
         <label class="full">Yeni Şifre (Tekrar)<input type="password" name="new_password_again" required></label>
-        <div class="full actions"><button class="btn primary" type="submit">Şifreyi Güncelle</button></div>
+        <div class="full actions"><button class="btn primary shine" type="submit">Şifreyi Güncelle</button></div>
     </form>
 </section>
 <?php require __DIR__ . '/includes/footer.php'; ?>
-

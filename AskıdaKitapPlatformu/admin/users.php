@@ -3,7 +3,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../includes/functions.php';
 require_admin();
 
-$activeMenu = '';
+$activeMenu = 'admin_users';
 $pageTitle = 'Kullanıcı Yönetimi';
 $errors = [];
 
@@ -13,12 +13,14 @@ if (is_post()) {
 
     if ($action === 'toggle') {
         $id = (int) ($_POST['id'] ?? 0);
-        $user = fetch_one('SELECT id, is_active FROM users WHERE id = :id', ['id' => $id]);
+        $user = fetch_one('SELECT id, is_active, full_name FROM users WHERE id = :id', ['id' => $id]);
         if ($user) {
+            $newState = ((int) $user['is_active'] === 1) ? 0 : 1;
             execute_query('UPDATE users SET is_active = :is_active, updated_at = NOW() WHERE id = :id', [
-                'is_active' => ((int) $user['is_active'] === 1) ? 0 : 1,
+                'is_active' => $newState,
                 'id' => $id,
             ]);
+            log_activity((int) current_user()['id'], 'Kullanıcı', 'Durum güncelleme', $user['full_name'] . ' kullanıcı durumu değiştirildi.');
             set_flash('success', 'Kullanıcı durumu güncellendi.');
             redirect('admin/users.php');
         }
@@ -28,7 +30,7 @@ if (is_post()) {
         $fullName = normalize_text((string) ($_POST['full_name'] ?? ''));
         $username = normalize_text((string) ($_POST['username'] ?? ''));
         $email = mb_strtolower(normalize_text((string) ($_POST['email'] ?? '')), 'UTF-8');
-        $role = (string) ($_POST['role'] ?? 'kullanici');
+        $role = (string) ($_POST['role'] ?? ROLE_USER);
         $city = normalize_text((string) ($_POST['city'] ?? ''));
         $password = (string) ($_POST['password'] ?? '');
 
@@ -41,7 +43,7 @@ if (is_post()) {
         if (mb_strlen($password, 'UTF-8') < 8) {
             $errors[] = 'Şifre en az 8 karakter olmalıdır.';
         }
-        if (!in_array($role, ['admin', 'kullanici', 'bagisci', 'talep_sahibi'], true)) {
+        if (!in_array($role, [ROLE_ADMIN, ROLE_USER, ROLE_DONOR, ROLE_REQUESTER], true)) {
             $errors[] = 'Rol seçimi geçersiz.';
         }
         if (fetch_one('SELECT id FROM users WHERE username = :username', ['username' => $username])) {
@@ -64,6 +66,7 @@ if (is_post()) {
                     'city' => $city,
                 ]
             );
+            log_activity((int) current_user()['id'], 'Kullanıcı', 'Kullanıcı eklendi', $fullName . ' hesabı oluşturuldu.');
             set_flash('success', 'Yeni kullanıcı oluşturuldu.');
             redirect('admin/users.php');
         }
@@ -92,7 +95,7 @@ require __DIR__ . '/../includes/header.php';
         </label>
         <label>Şehir<input type="text" name="city" required></label>
         <label>Şifre<input type="password" name="password" required></label>
-        <div class="full actions"><button class="btn primary" type="submit">Kullanıcı Ekle</button></div>
+        <div class="full actions"><button class="btn primary shine" type="submit">Kullanıcı Ekle</button></div>
     </form>
 </section>
 
@@ -101,38 +104,37 @@ require __DIR__ . '/../includes/header.php';
     <div class="table-wrap">
         <table class="table">
             <thead>
-                <tr>
-                    <th>Ad Soyad</th>
-                    <th>Kullanıcı Adı</th>
-                    <th>E-posta</th>
-                    <th>Rol</th>
-                    <th>Şehir</th>
-                    <th>Durum</th>
-                    <th>İşlem</th>
-                </tr>
+            <tr>
+                <th>Ad Soyad</th>
+                <th>Kullanıcı Adı</th>
+                <th>E-posta</th>
+                <th>Rol</th>
+                <th>Şehir</th>
+                <th>Durum</th>
+                <th>İşlem</th>
+            </tr>
             </thead>
             <tbody>
-                <?php foreach ($users as $u): ?>
-                    <tr>
-                        <td><?= e((string) $u['full_name']) ?></td>
-                        <td><?= e((string) $u['username']) ?></td>
-                        <td><?= e((string) $u['email']) ?></td>
-                        <td><?= e((string) $u['role']) ?></td>
-                        <td><?= e((string) $u['city']) ?></td>
-                        <td><span class="<?= (int) $u['is_active'] === 1 ? 'badge success' : 'badge danger' ?>"><?= (int) $u['is_active'] === 1 ? 'Aktif' : 'Pasif' ?></span></td>
-                        <td>
-                            <form method="post" style="display:inline">
-                                <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
-                                <input type="hidden" name="action" value="toggle">
-                                <input type="hidden" name="id" value="<?= e((string) $u['id']) ?>">
-                                <button class="btn ghost" type="submit"><?= (int) $u['is_active'] === 1 ? 'Pasifleştir' : 'Aktifleştir' ?></button>
-                            </form>
-                        </td>
-                    </tr>
-                <?php endforeach; ?>
+            <?php foreach ($users as $u): ?>
+                <tr>
+                    <td><?= e((string) $u['full_name']) ?></td>
+                    <td><?= e((string) $u['username']) ?></td>
+                    <td><?= e((string) $u['email']) ?></td>
+                    <td><?= e(role_label((string) $u['role'])) ?></td>
+                    <td><?= e((string) $u['city']) ?></td>
+                    <td><span class="<?= (int) $u['is_active'] === 1 ? 'badge success' : 'badge danger' ?>"><?= (int) $u['is_active'] === 1 ? 'Aktif' : 'Pasif' ?></span></td>
+                    <td>
+                        <form method="post" style="display:inline">
+                            <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+                            <input type="hidden" name="action" value="toggle">
+                            <input type="hidden" name="id" value="<?= e((string) $u['id']) ?>">
+                            <button class="btn ghost" type="submit"><?= (int) $u['is_active'] === 1 ? 'Pasifleştir' : 'Aktifleştir' ?></button>
+                        </form>
+                    </td>
+                </tr>
+            <?php endforeach; ?>
             </tbody>
         </table>
     </div>
 </section>
 <?php require __DIR__ . '/../includes/footer.php'; ?>
-

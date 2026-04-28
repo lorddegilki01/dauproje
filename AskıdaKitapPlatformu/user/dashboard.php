@@ -9,6 +9,7 @@ $user = current_user();
 
 $stats = [
     'added_books' => count_value('SELECT COUNT(*) FROM books WHERE donor_user_id = :id', ['id' => (int) $user['id']]),
+    'active_books' => count_value('SELECT COUNT(*) FROM books WHERE donor_user_id = :id AND status IN ("askida","askıda")', ['id' => (int) $user['id']]),
     'requested_books' => count_value('SELECT COUNT(*) FROM book_requests WHERE requester_user_id = :id', ['id' => (int) $user['id']]),
     'pending_requests' => count_value('SELECT COUNT(*) FROM book_requests WHERE requester_user_id = :id AND request_status = "bekliyor"', ['id' => (int) $user['id']]),
     'delivered_matches' => count_value('SELECT COUNT(*) FROM matches WHERE (requester_user_id=:id OR donor_user_id=:id) AND delivery_status = "teslim edildi"', ['id' => (int) $user['id']]),
@@ -35,10 +36,10 @@ $notifications = fetch_all(
 require __DIR__ . '/../includes/header.php';
 ?>
 <section class="stats-grid">
-    <article class="card stat"><h3>Eklediğim Kitap</h3><strong><?= e((string) $stats['added_books']) ?></strong></article>
-    <article class="card stat"><h3>Talep Ettiğim</h3><strong><?= e((string) $stats['requested_books']) ?></strong></article>
+    <article class="card stat"><h3>Bağışladığım Kitap</h3><strong><?= e((string) $stats['added_books']) ?></strong></article>
+    <article class="card stat"><h3>Aktif Askıdaki</h3><strong><?= e((string) $stats['active_books']) ?></strong></article>
+    <article class="card stat"><h3>Taleplerim</h3><strong><?= e((string) $stats['requested_books']) ?></strong></article>
     <article class="card stat"><h3>Bekleyen Talep</h3><strong><?= e((string) $stats['pending_requests']) ?></strong></article>
-    <article class="card stat"><h3>Teslim Edilen</h3><strong><?= e((string) $stats['delivered_matches']) ?></strong></article>
 </section>
 
 <section class="dashboard-grid">
@@ -66,6 +67,14 @@ require __DIR__ . '/../includes/header.php';
             <?php endforeach; ?>
         </ul>
     </article>
+    <article class="card">
+        <h2>Teslim Özeti</h2>
+        <ul class="list">
+            <li>Tamamlanan Teslim <strong><?= e((string) $stats['delivered_matches']) ?></strong></li>
+            <li><a href="<?= e(app_url('books/my_books.php')) ?>">Bağışlarım</a><span>Detay</span></li>
+            <li><a href="<?= e(app_url('requests/index.php')) ?>">Taleplerim</a><span>Detay</span></li>
+            <li><a href="<?= e(app_url('matches/index.php')) ?>">Teslim Süreci</a><span>Detay</span></li>
+        </ul>
+    </article>
 </section>
 <?php require __DIR__ . '/../includes/footer.php'; ?>
-

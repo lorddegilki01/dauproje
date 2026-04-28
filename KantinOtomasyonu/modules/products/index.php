@@ -12,8 +12,11 @@ $categoryId = (int) ($_GET['category_id'] ?? 0);
 $where = ['1=1'];
 $params = [];
 if ($q !== '') {
-    $where[] = '(p.product_name LIKE :q OR p.product_code LIKE :q OR p.barcode LIKE :q)';
-    $params['q'] = '%' . $q . '%';
+    $where[] = '(p.product_name LIKE :q_name OR p.product_code LIKE :q_code OR p.barcode LIKE :q_barcode)';
+    $qLike = '%' . $q . '%';
+    $params['q_name'] = $qLike;
+    $params['q_code'] = $qLike;
+    $params['q_barcode'] = $qLike;
 }
 if ($categoryId > 0) {
     $where[] = 'p.category_id = :category_id';

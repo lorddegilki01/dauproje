@@ -14,7 +14,7 @@ if (is_post()) {
     $email = mb_strtolower(normalize_text((string) ($_POST['email'] ?? '')), 'UTF-8');
     $password = (string) ($_POST['password'] ?? '');
     $passwordAgain = (string) ($_POST['password_again'] ?? '');
-    $role = (string) ($_POST['role'] ?? 'kullanici');
+    $role = (string) ($_POST['role'] ?? ROLE_USER);
     $city = normalize_text((string) ($_POST['city'] ?? ''));
     $phone = normalize_text((string) ($_POST['phone'] ?? ''));
 
@@ -30,10 +30,9 @@ if (is_post()) {
     if (mb_strlen($password, 'UTF-8') < 8) {
         $errors[] = 'Şifre en az 8 karakter olmalıdır.';
     }
-    if (!in_array($role, ['kullanici', 'bagisci', 'talep_sahibi'], true)) {
-        $role = 'kullanici';
+    if (!in_array($role, [ROLE_USER, ROLE_DONOR, ROLE_REQUESTER], true)) {
+        $role = ROLE_USER;
     }
-
     if (fetch_one('SELECT id FROM users WHERE username = :username LIMIT 1', ['username' => $username])) {
         $errors[] = 'Bu kullanıcı adı kullanılıyor.';
     }
@@ -56,6 +55,10 @@ if (is_post()) {
             ]
         );
 
+        $newUser = fetch_one('SELECT id FROM users WHERE username = :username LIMIT 1', ['username' => $username]);
+        log_activity($newUser ? (int) $newUser['id'] : null, 'Kimlik', 'Kayıt', 'Yeni kullanıcı kaydı oluşturuldu.');
+        system_log($newUser ? (int) $newUser['id'] : null, 'auth.register', 'basarili', 'Yeni kullanıcı kaydı oluşturuldu.');
+
         set_flash('success', 'Kayıt başarılı. Şimdi giriş yapabilirsiniz.');
         redirect('auth/login.php');
     }
@@ -65,8 +68,9 @@ $activeMenu = '';
 $pageTitle = 'Kayıt Ol';
 require __DIR__ . '/../includes/header.php';
 ?>
-<section class="card form-card">
+<section class="card form-card hero">
     <h2>Topluluğa Katılın</h2>
+    <p>Bağış yaparak ya da talep oluşturarak bu dayanışma ağına katkı sağlayın.</p>
     <?php foreach ($errors as $error): ?><div class="alert error"><?= e($error) ?></div><?php endforeach; ?>
     <form method="post" class="form grid-2">
         <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
@@ -85,10 +89,9 @@ require __DIR__ . '/../includes/header.php';
         <label>Şifre<input type="password" name="password" required></label>
         <label>Şifre (Tekrar)<input type="password" name="password_again" required></label>
         <div class="full actions">
-            <button class="btn primary" type="submit">Kayıt Ol</button>
+            <button class="btn primary shine" type="submit">Kayıt Ol</button>
             <a class="btn ghost" href="<?= e(app_url('auth/login.php')) ?>">Girişe Dön</a>
         </div>
     </form>
 </section>
 <?php require __DIR__ . '/../includes/footer.php'; ?>
-

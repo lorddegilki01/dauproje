@@ -3,13 +3,13 @@ declare(strict_types=1);
 require_once __DIR__ . '/../includes/functions.php';
 require_admin();
 
-$activeMenu = '';
-$pageTitle = 'Admin Paneli';
+$activeMenu = 'panel';
+$pageTitle = 'Yönetim Dashboard';
 
 $stats = [
     'total_users' => count_value('SELECT COUNT(*) FROM users'),
-    'active_books' => count_value('SELECT COUNT(*) FROM books WHERE status = "askıda" AND is_active = 1'),
-    'pending_requests' => count_value('SELECT COUNT(*) FROM book_requests WHERE request_status = "bekliyor"'),
+    'active_books' => count_value('SELECT COUNT(*) FROM books WHERE status IN ("askida","askıda") AND is_active = 1'),
+    'pending_requests' => count_value('SELECT COUNT(*) FROM book_requests WHERE request_status IN ("bekliyor")'),
     'waiting_matches' => count_value('SELECT COUNT(*) FROM matches WHERE delivery_status = "bekliyor"'),
     'completed_matches' => count_value('SELECT COUNT(*) FROM matches WHERE delivery_status = "teslim edildi"'),
 ];
@@ -51,9 +51,7 @@ require __DIR__ . '/../includes/header.php';
 
 <section class="dashboard-grid">
     <article class="card">
-        <div class="card-head">
-            <h2>Hızlı Yönetim</h2>
-        </div>
+        <div class="card-head"><h2>Hızlı Yönetim</h2></div>
         <div class="quick-links">
             <a class="btn ghost" href="<?= e(app_url('admin/users.php')) ?>">Kullanıcı Yönetimi</a>
             <a class="btn ghost" href="<?= e(app_url('admin/categories.php')) ?>">Kategori Yönetimi</a>
@@ -68,9 +66,7 @@ require __DIR__ . '/../includes/header.php';
     <article class="card">
         <h2>Popüler Kategoriler</h2>
         <ul class="list">
-            <?php if (!$popularCategories): ?>
-                <li>Veri bulunmuyor.</li>
-            <?php endif; ?>
+            <?php if (!$popularCategories): ?><li>Veri bulunmuyor.</li><?php endif; ?>
             <?php foreach ($popularCategories as $item): ?>
                 <li><?= e((string) $item['category_name']) ?> <strong><?= e((string) $item['total']) ?></strong></li>
             <?php endforeach; ?>
@@ -80,9 +76,7 @@ require __DIR__ . '/../includes/header.php';
     <article class="card">
         <h2>Şehirlere Göre Dağılım</h2>
         <ul class="list">
-            <?php if (!$cityDistribution): ?>
-                <li>Veri bulunmuyor.</li>
-            <?php endif; ?>
+            <?php if (!$cityDistribution): ?><li>Veri bulunmuyor.</li><?php endif; ?>
             <?php foreach ($cityDistribution as $city): ?>
                 <li><?= e((string) $city['city']) ?> <strong><?= e((string) $city['total']) ?></strong></li>
             <?php endforeach; ?>
@@ -95,27 +89,25 @@ require __DIR__ . '/../includes/header.php';
     <div class="table-wrap">
         <table class="table">
             <thead>
-                <tr>
-                    <th>Tarih</th>
-                    <th>Kullanıcı</th>
-                    <th>Modül</th>
-                    <th>İşlem</th>
-                    <th>Detay</th>
-                </tr>
+            <tr>
+                <th>Tarih</th>
+                <th>Kullanıcı</th>
+                <th>Modül</th>
+                <th>İşlem</th>
+                <th>Detay</th>
+            </tr>
             </thead>
             <tbody>
-                <?php if (!$recentActivities): ?>
-                    <tr><td colspan="5">Kayıt bulunmuyor.</td></tr>
-                <?php endif; ?>
-                <?php foreach ($recentActivities as $activity): ?>
-                    <tr>
-                        <td><?= e(format_date((string) $activity['created_at'])) ?></td>
-                        <td><?= e((string) ($activity['full_name'] ?? 'Sistem')) ?></td>
-                        <td><?= e((string) $activity['module_name']) ?></td>
-                        <td><?= e((string) $activity['action_name']) ?></td>
-                        <td><?= e((string) ($activity['details'] ?? '-')) ?></td>
-                    </tr>
-                <?php endforeach; ?>
+            <?php if (!$recentActivities): ?><tr><td colspan="5">Kayıt bulunmuyor.</td></tr><?php endif; ?>
+            <?php foreach ($recentActivities as $activity): ?>
+                <tr>
+                    <td><?= e(format_date((string) $activity['created_at'])) ?></td>
+                    <td><?= e((string) ($activity['full_name'] ?? 'Sistem')) ?></td>
+                    <td><?= e((string) $activity['module_name']) ?></td>
+                    <td><?= e((string) $activity['action_name']) ?></td>
+                    <td><?= e((string) ($activity['details'] ?? '-')) ?></td>
+                </tr>
+            <?php endforeach; ?>
             </tbody>
         </table>
     </div>
